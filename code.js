@@ -33,7 +33,7 @@ RPM.Manager.Plugins.registerCommand(pluginName, "Spawn window", (id, x, y, width
 {
 	const value = [id, new RPM.Core.WindowBox(x, y, width, height,
 	{
-		content: new RPM.Graphic.Message(text, -1, 0, 0),
+		content: new RPM.Graphic.Message(text.toString(), -1, 0, 0),
 		padding: RPM.Core.WindowBox.VERY_SMALL_PADDING_BOX
 	})];
 	value[1].content.update();
@@ -76,7 +76,7 @@ RPM.Manager.Plugins.registerCommand(pluginName, "Update window", (id) =>
 RPM.Manager.Plugins.registerCommand(pluginName, "Edit content", (id, text) =>
 {
 	const p = getWindow(id);
-	p.content.setMessage(text);
+	p.content.setMessage(text.toString());
 	p.content.update();
 });
 
