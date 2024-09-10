@@ -31,19 +31,20 @@ RPM.Core.WindowBox.prototype.draw = function (isChoice = false, windowDimension 
 
 RPM.Manager.Plugins.registerCommand(pluginName, "Spawn window", (id, x, y, width, height, text) =>
 {
-	var i;
-	text = text.toString();
-	while (true) // not the best practice but works in this scenario
-	{
-		i = text.search(/[^\\]\\n/); // regex for "find \n except when it's \\n"
-		if (i === -1)
-			break;
-		text = text.slice(0, i + 1) + "\n" + text.slice(i + 3);
-	}
+    var i;
+    text = text.toString();
+    while (true) // not the best practice but works in this scenario
+    {
+        i = text.search(/[^\\]\\n/); // regex for "find \n except when it's \\n"
+        if (i === -1)
+            break;
+        text = text.slice(0, i + 1) + "\n" + text.slice(i + 3);
+    }
+	const pad = RPM.Datas.Systems.dbOptions;
     const value = [id, new RPM.Core.WindowBox(x, y, width, height,
     {
         content: new RPM.Graphic.Message(text, -1, 0, 0),
-        padding: RPM.Core.WindowBox.VERY_SMALL_PADDING_BOX
+        padding: [pad.v_pLeft, pad.v_pTop, pad.v_pRight, pad.v_pBottom]
     })];
     value[1].content.update();
     value[1].customWindowSkin = RPM.Datas.Systems.getCurrentWindowSkin();
