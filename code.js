@@ -1,6 +1,6 @@
 import { RPM } from "../path.js"
 
-const pluginName = "Multiple window boxes";
+const pluginName = "Multiple text boxes";
 
 RPM.Core.WindowBox.prototype.draw = function (isChoice = false, windowDimension = this.windowDimension, contentDimension = this.contentDimension)
 {
@@ -40,7 +40,7 @@ RPM.Manager.Plugins.registerCommand(pluginName, "Spawn window", (id, x, y, width
             break;
         text = text.slice(0, i + 1) + "\n" + text.slice(i + 3);
     }
-	const pad = RPM.Datas.Systems.dbOptions;
+    const pad = RPM.Datas.Systems.dbOptions;
     const value = [id, new RPM.Core.WindowBox(x, y, width, height,
     {
         content: new RPM.Graphic.Message(text, -1, 0, 0),
