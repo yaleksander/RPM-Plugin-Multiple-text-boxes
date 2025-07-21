@@ -38,6 +38,19 @@ document.addEventListener("mousemove", (e) =>
 	lastY = e.clientY;
 });
 
+window.addEventListener("resize", (e) =>
+{
+	const p = RPM.Manager.Stack.displayedPictures;
+	for (var i = 0; i < p.length; i++)
+	{
+		if (!!p[i][1].customWindowSkin)
+		{
+			p[i][1].updateDimensions();
+			p[i][1].update();
+		}
+	}
+});
+
 function getWindow(id)
 {
 	const p = RPM.Manager.Stack.displayedPictures;
@@ -89,19 +102,29 @@ RPM.Manager.Plugins.registerCommand(pluginName, "Spawn window", (id, x, y, width
 
 RPM.Manager.Plugins.registerCommand(pluginName, "Update window", (id) =>
 {
-	getWindow(id).update();
+	const p = getWindow(id);
+	if (!!p)
+	{
+		p.updateDimensions();
+		p.update();
+	}
 });
 
 RPM.Manager.Plugins.registerCommand(pluginName, "Edit content", (id, text) =>
 {
 	const p = getWindow(id);
-	p.content.setMessage(text.toString());
-	p.content.update();
+	if (!!p)
+	{
+		p.content.setMessage(text.toString());
+		p.content.update();
+	}
 });
 
 RPM.Manager.Plugins.registerCommand(pluginName, "Mark selected", (id, select) =>
 {
-	getWindow(id).selected = select;
+	const p = getWindow(id);
+	if (!!p)
+		getWindow(id).selected = select;
 });
 
 RPM.Manager.Plugins.registerCommand(pluginName, "Get window under cursor", (variable) =>
@@ -117,5 +140,72 @@ RPM.Manager.Plugins.registerCommand(pluginName, "Get window under cursor", (vari
 			RPM.Core.Game.current.variables[variable] = p[i][0];
 			break;
 		}
+	}
+});
+
+class DisplayChoiceCustom extends RPM.EventCommand.DisplayChoice
+{
+	constructor(command)
+	{
+		super([-1, command[0]]);
+		var i = 0;
+		this.choices = command[i++];
+		this.x = command[i++];
+		this.y = command[i++];
+		this.maxWidth = command[i++];
+		this.height = command[i++];
+		this.space = command[i++];
+		this.currentSelectedIndex = command[i++];
+		this.cancelAutoIndex = RPM.System.DynamicValue.createNumber(command[i++]);
+		this.resultVariableID = command[i++];
+		this. disableCancel = command[i++];
+
+		this.graphics = new Array(this.choices.length);
+		for (let i = 0; i < this.choices.length; i++)
+		{
+			this.graphics[i] = new RPM.Graphic.Text(this.choices[i], { align: RPM.Common.Enum.Align.Center });
+			this.maxWidth = Math.max(this.maxWidth, this.graphics[i].textWidth);
+		}
+	}
+
+	initialize()
+	{
+		RPM.Core.Game.current.variables[this.resultVariableID] = null;
+		this.windowChoices = new RPM.Core.WindowChoices(this.x, this.y, this.maxWidth, this.height, this.graphics, { nbItemsMax: this.choices.length, space: this.space });
+		return { index: -1 };
+	}
+
+	action(currentState, isKey, options = {})
+	{
+		if (RPM.Scene.MenuBase.checkActionMenu(isKey, options))
+		{
+			RPM.Datas.Systems.soundConfirmation.playSound();
+			currentState.index = this.windowChoices.currentSelectedIndex;
+			RPM.Core.Game.current.variables[this.resultVariableID] = currentState.index;
+		}
+		else if (RPM.Scene.MenuBase.checkCancel(isKey, options) && !this.disableCancel)
+		{
+			RPM.Datas.Systems.soundCancel.playSound();
+			currentState.index = this.cancelAutoIndex.getValue();
+			RPM.Core.Game.current.variables[this.resultVariableID] = currentState.index;
+		}
+	}
+
+	update(currentState)
+	{
+		this.windowChoices.update();
+		return RPM.Core.Game.current.variables[this.resultVariableID] !== null;
+	}
+}
+
+RPM.Manager.Plugins.registerCommand(pluginName, "Display choices", (choices, x, y, width, height, spacing, selected, cancel, result, disableCancel) =>
+{
+	const c = RPM.Core.ReactionInterpreter.currentReaction.currentCommand;
+	if (!c.hasDisplayChoiceCustomCommand)
+	{
+		c.hasDisplayChoiceCustomCommand = true;
+		const n = c.next;
+		c.next = new RPM.Core.Node(c.parent, new DisplayChoiceCustom([choices, x, y, width, height, spacing, selected, cancel, result, disableCancel]));
+		c.next.next = n;
 	}
 });
