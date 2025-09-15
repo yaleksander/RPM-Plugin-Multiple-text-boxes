@@ -10,7 +10,7 @@ RPM.Core.WindowBox.prototype.draw = function (isChoice = false, windowDimension 
 	if (this.content)
 		this.content.drawBehind(contentDimension[0], contentDimension[1], contentDimension[2], contentDimension[3]);
 
-	// Single line alteration from source code
+	// Single line alteration from source code (before window resize bug fix)
 	!!this.customWindowSkin ? this.customWindowSkin.drawBox(windowDimension, this.selected, this.bordersVisible) : RPM.Datas.Systems.getCurrentWindowSkin().drawBox(windowDimension, this.selected, this.bordersVisible);
 
 	if (this.content)
@@ -24,7 +24,12 @@ RPM.Core.WindowBox.prototype.draw = function (isChoice = false, windowDimension 
 			RPM.Common.Platform.ctx.clip();
 		}
 		if (isChoice)
-			this.content.drawChoice(contentDimension[0], contentDimension[1], contentDimension[2], contentDimension[3]);
+			this.content.drawChoice(
+				RPM.Common.ScreenResolution.getScreenX(contentDimension[0]),
+				RPM.Common.ScreenResolution.getScreenY(contentDimension[1]),
+				RPM.Common.ScreenResolution.getScreenX(contentDimension[2]),
+				RPM.Common.ScreenResolution.getScreenY(contentDimension[3])
+			);
 		else
 			this.content.draw(contentDimension[0], contentDimension[1], contentDimension[2], contentDimension[3]);
 		if (!isChoice && this.limitContent)
@@ -158,7 +163,7 @@ class DisplayChoiceCustom extends RPM.EventCommand.DisplayChoice
 		this.currentSelectedIndex = command[i++];
 		this.cancelAutoIndex = RPM.System.DynamicValue.createNumber(command[i++]);
 		this.resultVariableID = command[i++];
-		this. disableCancel = command[i++];
+		this.disableCancel = command[i++];
 
 		this.graphics = new Array(this.choices.length);
 		for (let i = 0; i < this.choices.length; i++)
@@ -172,6 +177,8 @@ class DisplayChoiceCustom extends RPM.EventCommand.DisplayChoice
 	{
 		RPM.Core.Game.current.variables[this.resultVariableID] = null;
 		this.windowChoices = new RPM.Core.WindowChoices(this.x, this.y, this.maxWidth, this.height, this.graphics, { nbItemsMax: this.choices.length, space: this.space });
+		this.windowChoices.unselect();
+		this.windowChoices.select(this.currentSelectedIndex);
 		return { index: -1 };
 	}
 
